@@ -8,13 +8,50 @@
         body {
             font-family: Arial, sans-serif;
             max-width: 600px;
-            margin: 50px auto;
+            margin: 30px auto;
             padding: 20px;
             background-color: #f5f5f5;
         }
         h1 {
             color: #333;
             text-align: center;
+        }
+        #question-text {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            font-size: 16px;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+        .choice {
+            background: white;
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin: 8px 0;
+            cursor: pointer;
+            border: 2px solid transparent;
+            font-size: 15px;
+        }
+        .choice:hover {
+            border-color: #4CAF50;
+        }
+        .correct {
+            background-color: #d4edda;
+            border-color: #4CAF50;
+        }
+        .incorrect {
+            background-color: #f8d7da;
+            border-color: #dc3545;
+        }
+        #explanation {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 15px;
+            display: none;
+            font-size: 15px;
+            line-height: 1.6;
         }
         button {
             background-color: #4CAF50;
@@ -27,27 +64,75 @@
             display: block;
             margin: 20px auto;
         }
-        #question {
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            margin-top: 20px;
+        #status {
+            text-align: center;
             font-size: 16px;
-            line-height: 1.6;
+            margin: 10px;
+            color: #333;
         }
     </style>
 </head>
 <body>
     <h1>Quizikal</h1>
     <button onclick="getQuestion()">Generate Question</button>
-    <div id="question">Click the button to generate your first question!</div>
+    <div id="status"></div>
+    <div id="question-text"></div>
+    <div id="choices"></div>
+    <div id="explanation"></div>
 
     <script>
+        let correctAnswer = '';
+        let answered = false;
+
         async function getQuestion() {
-            document.getElementById('question').innerHTML = 'Loading...';
+            answered = false;
+            document.getElementById('status').innerHTML = 'Loading...';
+            document.getElementById('question-text').innerHTML = '';
+            document.getElementById('choices').innerHTML = '';
+            document.getElementById('explanation').style.display = 'none';
+
             const response = await fetch('/api/question');
             const data = await response.json();
-            document.getElementById('question').innerHTML = data.question;
+
+            correctAnswer = data.correct;
+
+            document.getElementById('status').innerHTML = '';
+            document.getElementById('question-text').innerHTML = data.question;
+
+            const choicesDiv = document.getElementById('choices');
+            choicesDiv.innerHTML = '';
+            for (const [letter, text] of Object.entries(data.choices)) {
+                const div = document.createElement('div');
+                div.className = 'choice';
+                div.innerHTML = `<strong>${letter})</strong> ${text}`;
+                div.onclick = () => selectAnswer(letter, div, data.explanation);
+                choicesDiv.appendChild(div);
+            }
+        }
+
+        function selectAnswer(letter, element, explanation) {
+            if (answered) return;
+            answered = true;
+
+            const choices = document.querySelectorAll('.choice');
+            choices.forEach(c => c.onclick = null);
+
+            if (letter === correctAnswer) {
+                element.classList.add('correct');
+                document.getElementById('status').innerHTML = '✅ Correct!';
+            } else {
+                element.classList.add('incorrect');
+                document.getElementById('status').innerHTML = '❌ Not quite!';
+                choices.forEach(c => {
+                    if (c.innerHTML.includes(`<strong>${correctAnswer})`)) {
+                        c.classList.add('correct');
+                    }
+                });
+            }
+
+            const expDiv = document.getElementById('explanation');
+            expDiv.innerHTML = '<strong>Explanation:</strong> ' + explanation;
+            expDiv.style.display = 'block';
         }
     </script>
 </body>
