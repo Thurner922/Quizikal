@@ -12,19 +12,27 @@ export default async function handler(req, res) {
       messages: [
         {
           role: 'user',
-          content: `Generate one multiple choice question testing English grammar skills at a 5th grade level in ACT format. 
-          Include:
-          - The question
-          - Four answer choices labeled A, B, C, D
-          - The correct answer
-          - A brief explanation of why it is correct
-          Format it clearly and simply.`
+          content: `Generate one multiple choice English grammar question at a 5th grade level in ACT format.
+
+Respond in this EXACT JSON format and nothing else:
+{
+  "question": "the question text here",
+  "choices": {
+    "A": "first choice",
+    "B": "second choice", 
+    "C": "third choice",
+    "D": "fourth choice"
+  },
+  "correct": "B",
+  "explanation": "explanation of why B is correct"
+}`
         }
       ]
     })
   });
 
   const data = await response.json();
-  const question = data.content[0].text;
-  res.status(200).json({ question });
+  const text = data.content[0].text;
+  const parsed = JSON.parse(text);
+  res.status(200).json(parsed);
 }
