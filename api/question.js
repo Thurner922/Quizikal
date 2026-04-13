@@ -33,6 +33,7 @@ Respond in this EXACT JSON format and nothing else:
 
   const data = await response.json();
   const text = data.content[0].text;
-  const parsed = JSON.parse(text);
+  const clean = text.replace(/```json|```/g, '').trim();
+  const parsed = JSON.parse(clean);
   res.status(200).json(parsed);
 }
