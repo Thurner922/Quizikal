@@ -1,4 +1,7 @@
 export default async function handler(req, res) {
+  const letters = ['A', 'B', 'C', 'D'];
+  const forcedAnswer = letters[Math.floor(Math.random() * 4)];
+
   const response = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: {
@@ -12,7 +15,9 @@ export default async function handler(req, res) {
       messages: [
         {
           role: 'user',
-          content: `Generate one multiple choice English grammar question at a 5th grade level in ACT format. Make the question different every time - vary the grammar concepts tested such as commas, subject-verb agreement, punctuation, capitalization, or sentence structure. The correct answer should be randomly distributed among A, B, C, and D - do not always make B the correct answer.
+          content: `Generate one multiple choice English grammar question at a 5th grade level in ACT format. Vary the grammar concepts tested such as commas, subject-verb agreement, punctuation, capitalization, or sentence structure.
+
+The correct answer MUST be option ${forcedAnswer}. Build the question so that ${forcedAnswer} is genuinely the correct answer.
 
 Respond in this EXACT JSON format and nothing else:
 {
@@ -23,8 +28,8 @@ Respond in this EXACT JSON format and nothing else:
     "C": "third choice",
     "D": "fourth choice"
   },
-  "correct": "A or B or C or D depending on which is actually correct",
-  "explanation": "explanation of why the correct answer is right"
+  "correct": "${forcedAnswer}",
+  "explanation": "explanation of why ${forcedAnswer} is correct"
 }`
         }
       ]
