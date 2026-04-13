@@ -12,7 +12,7 @@ export default async function handler(req, res) {
       messages: [
         {
           role: 'user',
-          content: `Generate one multiple choice English grammar question at a 5th grade level in ACT format.
+          content: `Generate one multiple choice English grammar question at a 5th grade level in ACT format. Make the question different every time - vary the grammar concepts tested such as commas, subject-verb agreement, punctuation, capitalization, or sentence structure. The correct answer should be randomly distributed among A, B, C, and D - do not always make B the correct answer.
 
 Respond in this EXACT JSON format and nothing else:
 {
@@ -23,8 +23,8 @@ Respond in this EXACT JSON format and nothing else:
     "C": "third choice",
     "D": "fourth choice"
   },
-  "correct": "B",
-  "explanation": "explanation of why B is correct"
+  "correct": "A or B or C or D depending on which is actually correct",
+  "explanation": "explanation of why the correct answer is right"
 }`
         }
       ]
