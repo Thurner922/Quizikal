@@ -49,23 +49,6 @@
         .choice:hover {
             border-color: #4CAF50;
         }
-        .correct {
-            background-color: #d4edda;
-            border-color: #4CAF50;
-        }
-        .incorrect {
-            background-color: #f8d7da;
-            border-color: #dc3545;
-        }
-        #explanation {
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            margin-top: 15px;
-            display: none;
-            font-size: 15px;
-            line-height: 1.6;
-        }
         button {
             background-color: #4CAF50;
             color: white;
@@ -86,16 +69,19 @@
         }
         #results {
             display: none;
+        }
+        #score-card {
             background: white;
             padding: 30px;
             border-radius: 10px;
             text-align: center;
+            margin-bottom: 20px;
         }
-        #results h2 {
+        #score-card h2 {
             font-size: 28px;
             margin-bottom: 10px;
         }
-        #results p {
+        #score-card p {
             font-size: 18px;
             margin: 8px 0;
             color: #444;
@@ -106,6 +92,37 @@
             color: #4CAF50;
             margin: 20px 0;
         }
+        .review-item {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            border-left: 5px solid #ccc;
+        }
+        .review-item.correct {
+            border-left-color: #4CAF50;
+        }
+        .review-item.incorrect {
+            border-left-color: #dc3545;
+        }
+        .review-question {
+            font-size: 15px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .review-answer {
+            font-size: 14px;
+            margin: 4px 0;
+        }
+        .review-explanation {
+            font-size: 14px;
+            color: #555;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid #eee;
+        }
+        .correct-text { color: #4CAF50; font-weight: bold; }
+        .incorrect-text { color: #dc3545; font-weight: bold; }
         #loading {
             text-align: center;
             font-size: 16px;
@@ -128,34 +145,38 @@
         <div id="question-text"></div>
         <div id="choices"></div>
         <div id="status"></div>
-        <div id="explanation"></div>
-        <button id="next-btn" onclick="nextQuestion()" style="display:none">Next Question</button>
     </div>
 
     <div id="results">
-        <h2>Quiz Complete!</h2>
-        <div id="score-display"></div>
-        <p id="correct-display"></p>
-        <p id="time-display"></p>
-        <p id="message-display"></p>
-        <button onclick="restartQuiz()">Try Again</button>
+        <div id="score-card">
+            <h2>Quiz Complete!</h2>
+            <div id="score-display"></div>
+            <p id="correct-display"></p>
+            <p id="time-display"></p>
+            <p id="message-display"></p>
+            <button onclick="restartQuiz()">Try Again</button>
+        </div>
+        <h2 style="text-align:center">Question Review</h2>
+        <div id="review-list"></div>
     </div>
 
     <script>
         let correctAnswer = '';
-        let answered = false;
         let currentQuestion = 0;
         let correctCount = 0;
         let totalSeconds = 0;
         let timerInterval = null;
         let score = 0;
+        let reviewData = [];
 
         function startQuiz() {
             currentQuestion = 0;
             correctCount = 0;
             totalSeconds = 0;
             score = 1000;
+            reviewData = [];
             document.getElementById('start-screen').style.display = 'none';
+            document.getElementById('results').style.display = 'none';
             document.getElementById('quiz-screen').style.display = 'block';
             startTimer();
             loadQuestion();
@@ -173,13 +194,10 @@
         }
 
         async function loadQuestion() {
-            answered = false;
             document.getElementById('loading').style.display = 'block';
             document.getElementById('question-text').innerHTML = '';
             document.getElementById('choices').innerHTML = '';
-            document.getElementById('explanation').style.display = 'none';
             document.getElementById('status').innerHTML = '';
-            document.getElementById('next-btn').style.display = 'none';
             document.getElementById('progress').innerHTML = 
                 `Question ${currentQuestion + 1} of 10`;
 
@@ -196,47 +214,36 @@
                 const div = document.createElement('div');
                 div.className = 'choice';
                 div.innerHTML = `<strong>${letter})</strong> ${text}`;
-                div.onclick = () => selectAnswer(letter, div, data.explanation);
+                div.onclick = () => selectAnswer(letter, data);
                 choicesDiv.appendChild(div);
             }
         }
 
-        function selectAnswer(letter, element, explanation) {
-            if (answered) return;
-            answered = true;
+        function selectAnswer(letter, data) {
+            const isCorrect = letter === data.correct;
 
-            const choices = document.querySelectorAll('.choice');
-            choices.forEach(c => c.onclick = null);
-
-            if (letter === correctAnswer) {
-                element.classList.add('correct');
-                document.getElementById('status').innerHTML = '✅ Correct!';
+            if (isCorrect) {
                 correctCount++;
             } else {
-                element.classList.add('incorrect');
-                document.getElementById('status').innerHTML = '❌ Not quite!';
                 score = Math.max(0, score - 100);
-                choices.forEach(c => {
-                    if (c.innerHTML.includes(`<strong>${correctAnswer})`)) {
-                        c.classList.add('correct');
-                    }
-                });
             }
 
-            const expDiv = document.getElementById('explanation');
-            expDiv.innerHTML = '<strong>Explanation:</strong> ' + explanation;
-            expDiv.style.display = 'block';
+            reviewData.push({
+                question: data.question,
+                choices: data.choices,
+                correct: data.correct,
+                selected: letter,
+                explanation: data.explanation,
+                isCorrect
+            });
 
-            if (currentQuestion < 9) {
-                document.getElementById('next-btn').style.display = 'block';
-            } else {
-                setTimeout(showResults, 1500);
-            }
-        }
-
-        function nextQuestion() {
             currentQuestion++;
-            loadQuestion();
+
+            if (currentQuestion < 10) {
+                loadQuestion();
+            } else {
+                showResults();
+            }
         }
 
         function showResults() {
@@ -260,11 +267,41 @@
             document.getElementById('time-display').innerHTML = 
                 `Completed in ${timeStr}`;
             document.getElementById('message-display').innerHTML = message;
+
+            const reviewList = document.getElementById('review-list');
+            reviewList.innerHTML = '';
+            reviewData.forEach((item, index) => {
+                const div = document.createElement('div');
+                div.className = `review-item ${item.isCorrect ? 'correct' : 'incorrect'}`;
+                
+                let choicesHTML = '';
+                for (const [letter, text] of Object.entries(item.choices)) {
+                    let style = '';
+                    if (letter === item.correct) style = 'correct-text';
+                    else if (letter === item.selected && !item.isCorrect) style = 'incorrect-text';
+                    choicesHTML += `<div class="review-answer ${style}">
+                        <strong>${letter})</strong> ${text}
+                        ${letter === item.selected ? ' ← Your answer' : ''}
+                        ${letter === item.correct && !item.isCorrect ? ' ← Correct answer' : ''}
+                    </div>`;
+                }
+
+                div.innerHTML = `
+                    <div class="review-question">
+                        ${item.isCorrect ? '✅' : '❌'} Q${index + 1}: ${item.question}
+                    </div>
+                    ${choicesHTML}
+                    <div class="review-explanation">
+                        <strong>Explanation:</strong> ${item.explanation}
+                    </div>
+                `;
+                reviewList.appendChild(div);
+            });
         }
 
         function restartQuiz() {
             document.getElementById('results').style.display = 'none';
-            document.getElementById('start-screen').style.display = 'block';
+            startQuiz();
         }
     </script>
 </body>
