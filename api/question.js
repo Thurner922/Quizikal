@@ -19,6 +19,10 @@ export default async function handler(req, res) {
 
 The correct answer MUST be option ${forcedAnswer}. Build the question so that ${forcedAnswer} is genuinely the correct answer.
 
+All four answer choices MUST be completely different from each other. Never use the same text in two choices. Double check that A, B, C, and D are all unique before responding.
+
+Each wrong answer choice should represent a different type of mistake so students can learn from each one.
+
 Respond in this EXACT JSON format and nothing else:
 {
   "question": "the question text here",
