@@ -1,1 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quizikal Admin - Generate Questions</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        h1 { text-align: center; color: #333; }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 5px;
+            font-size: 18px;
+            cursor: pointer;
+            display: block;
+            margin: 20px auto;
+        }
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        #status {
+            text-align: center;
+            font-size: 16px;
+            margin: 20px;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <h1>Quizikal Admin</h1>
+    <p style="text-align:center">Click the button to generate a fresh batch of questions and store them in the database.</p>
+    <button id="generateBtn" onclick="generateQuestions()">Generate Question Batch</button>
+    <div id="status"></div>
 
+    <script>
+        async function generateQuestions() {
+            const btn = document.getElementById('generateBtn');
+            const status = document.getElementById('status');
+            
+            btn.disabled = true;
+            btn.innerHTML = 'Generating... please wait';
+            status.style.display = 'block';
+            status.innerHTML = '⏳ Generating questions — this may take 2-3 minutes...';
+
+            try {
+                const response = await fetch('/api/generate-questions', {
+                    method: 'POST'
+                });
+                const data = await response.json();
+                
+                status.innerHTML = `
+                    ✅ Done!<br><br>
+                    Questions generated: ${data.generated}<br>
+                    Errors: ${data.errors}
+                `;
+                btn.innerHTML = 'Generate Another Batch';
+                btn.disabled = false;
+            } catch (error) {
+                status.innerHTML = '❌ Error — check console for details';
+                btn.innerHTML = 'Try Again';
+                btn.disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>
